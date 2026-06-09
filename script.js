@@ -5,12 +5,12 @@
   const SERVICE_NAME = "Microtox Glass Skin";
   const SERVICE_DURATION_MIN = 60;
 
-  // GHL credentials — UPDATE THESE with HairChitect's calendar/location/API
+  // GHL credentials — HairChitect Microtox Glass Skin
   const GHL = {
-    locationId: '9fZSzFzTFV8sZzfj4SlV',
-    calendarId: 'MXYdHY62boEtbYg013ho',
+    locationId: 'akCVeulrx9UG8kXb22pT',
+    calendarId: 'X7hxunThp1RAWdsiXHXt',
     userId:     '2tQreqXcDpaAiSBqlK7T',
-    apiKey:     'pit-cb0574e9-f84b-402f-a440-36aabe739ad1',
+    apiKey:     'pit-b1b6cfdf-d979-44e7-a426-69f83361e436',
     apiBase:    'https://services.leadconnectorhq.com',
     version:    '2021-07-28',
   };
@@ -253,6 +253,21 @@
     }
   }
 
+  const PIXEL_ID = '1178133073434960';
+
+  function track(event, params) {
+    if (typeof window.fbq === "function") {
+      try {
+        window.fbq("trackSingle", PIXEL_ID, event, params || {});
+      } catch (_) {}
+    }
+  }
+
+  // ViewContent on load
+  (function fireViewContent() {
+    track("ViewContent", { content_name: SERVICE_NAME });
+  })();
+
   // ------- Selection handlers -------
   function selectDate(d) {
     selectedDate = startOfDay(d);
@@ -326,6 +341,30 @@
         title:          `${name} — Microtox Glass Skin`,
         selectedTimezone: BUSINESS_TZ,
       });
+
+      // Pixel tracking
+      track("Lead", { content_name: SERVICE_NAME });
+      track("Schedule", { content_name: SERVICE_NAME });
+      track("CompleteRegistration", { content_name: SERVICE_NAME });
+
+      // CAPI call
+      try {
+        const getCookie = (n) =>
+          document.cookie.match("(^|;)\\s*" + n + "\\s*=\\s*([^;]+)")?.pop() || "";
+        fetch("/api/capi", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          body: JSON.stringify({
+            eventId,
+            email,
+            phone,
+            eventSourceUrl: location.href,
+            fbp: getCookie("_fbp"),
+            fbc: getCookie("_fbc"),
+          }),
+        }).catch(() => {});
+      } catch (e) {}
 
       renderConfirmation({
         service: SERVICE_NAME,
