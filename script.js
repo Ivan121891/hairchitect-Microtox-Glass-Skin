@@ -254,6 +254,7 @@
   }
 
   const PIXEL_ID = '1178133073434960';
+  const DEDICATED_PIXEL_ID = '3984133078554067';
 
   function track(event, params) {
     if (typeof window.fbq === "function") {
@@ -263,9 +264,21 @@
     }
   }
 
-  // ViewContent on load
+  function trackDedicated(event, params, eventId) {
+    if (typeof window.fbq === "function") {
+      try {
+        var opts = eventId ? { eventID: eventId } : {};
+        window.fbq("trackSingle", DEDICATED_PIXEL_ID, event, params || {}, opts);
+      } catch (_) {}
+    }
+  }
+
+  // ViewContent on load — fires to dedicated pixel only
+  var vcFired = false;
   (function fireViewContent() {
-    track("ViewContent", { content_name: SERVICE_NAME });
+    if (vcFired) return;
+    vcFired = true;
+    trackDedicated("ViewContent", { content_name: SERVICE_NAME });
   })();
 
   // ------- Selection handlers -------
@@ -346,6 +359,7 @@
       track("Lead", { content_name: SERVICE_NAME });
       track("Schedule", { content_name: SERVICE_NAME });
       track("CompleteRegistration", { content_name: SERVICE_NAME });
+      trackDedicated("Schedule", { content_name: SERVICE_NAME }, eventId);
 
       // CAPI call
       try {
